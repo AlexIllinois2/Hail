@@ -77,6 +77,7 @@ class SettingsFragment : MainFragment(), MenuProvider {
     @Composable
     private fun SettingsScreen() {
         val autoFreezeAfterLock = rememberPreferenceState(HailData.AUTO_FREEZE_AFTER_LOCK, false)
+        val swipeFreezeEnabled = rememberPreferenceState(HailData.SWIPE_FREEZE_ENABLED, false)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             listPreference(
                 key = HailData.WORKING_MODE,
@@ -234,6 +235,42 @@ class SettingsFragment : MainFragment(), MenuProvider {
                 titleId = R.string.skip_notifying_app,
                 enabled = autoFreezeAfterLock.value,
                 icon = Icons.Outlined.NotificationsActive
+            )
+            horizontalDivider()
+            preferenceCategory(key = "swipe_freeze", title = { Text(text = stringResource(R.string.swipe_freeze)) })
+            switchPreference(
+                rememberState = { swipeFreezeEnabled },
+                onValueChange = { _, value ->
+                    if (value && !HailData.workingMode.startsWith(HailData.SU)) {
+                        HUI.showToast(R.string.swipe_freeze_needs_root)
+                        false
+                    } else {
+                        app.setSwipeFreezeService(value)
+                        true
+                    }
+                },
+                titleId = R.string.swipe_freeze,
+                icon = Icons.Outlined.AcUnit
+            )
+            sliderPreference(
+                key = HailData.SWIPE_FREEZE_INTERVAL,
+                defaultValue = 1f,
+                title = { Text(text = stringResource(R.string.swipe_freeze_interval)) },
+                valueRange = 0.5f..5f,
+                valueSteps = 8,
+                enabled = { swipeFreezeEnabled.value },
+                icon = { Icon(imageVector = Icons.Outlined.Timer, contentDescription = null) },
+                valueText = { Text(text = "%.1f s".format(it)) },
+            )
+            sliderPreference(
+                key = HailData.SWIPE_FREEZE_DELAY,
+                defaultValue = 1f,
+                title = { Text(text = stringResource(R.string.swipe_freeze_delay)) },
+                valueRange = 0.5f..5f,
+                valueSteps = 8,
+                enabled = { swipeFreezeEnabled.value },
+                icon = { Icon(imageVector = Icons.Outlined.HourglassTop, contentDescription = null) },
+                valueText = { Text(text = "%.1f s".format(it)) },
             )
             horizontalDivider()
             preferenceCategory(key = "shortcuts", title = { Text(text = stringResource(R.string.title_shortcuts)) })

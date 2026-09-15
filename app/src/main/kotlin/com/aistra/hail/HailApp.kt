@@ -12,6 +12,7 @@ import androidx.core.content.getSystemService
 import com.aistra.hail.app.AppManager
 import com.aistra.hail.app.HailData
 import com.aistra.hail.services.AutoFreezeService
+import com.aistra.hail.services.SwipeFreezeService
 import com.aistra.hail.utils.HDhizuku
 import com.aistra.hail.utils.HTarget
 
@@ -44,6 +45,12 @@ class HailApp : Application() {
             if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
             PackageManager.DONT_KILL_APP
         )
+    }
+
+    fun setSwipeFreezeService(enabled: Boolean = HailData.swipeFreezeEnabled) {
+        val intent = Intent(this, SwipeFreezeService::class.java)
+        if (enabled) ContextCompat.startForegroundService(this, intent)
+        else stopService(intent)
     }
 
     fun setAppTheme(theme: String) {

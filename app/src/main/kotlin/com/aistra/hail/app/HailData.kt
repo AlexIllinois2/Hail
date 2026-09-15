@@ -120,6 +120,9 @@ object HailData {
     const val SKIP_WHILE_CHARGING = "skip_while_charging"
     const val SKIP_FOREGROUND_APP = "skip_foreground_app"
     const val SKIP_NOTIFYING_APP = "skip_notifying_app"
+    const val SWIPE_FREEZE_ENABLED = "swipe_freeze_enabled"
+    const val SWIPE_FREEZE_INTERVAL = "swipe_freeze_interval_f"
+    const val SWIPE_FREEZE_DELAY = "swipe_freeze_delay_f"
     const val DYNAMIC_SHORTCUT_ACTION = "dynamic_shortcut_action"
     val DYNAMIC_SHORTCUT_ACTIONS = listOf(
         ACTION_NONE,
@@ -154,6 +157,9 @@ object HailData {
     val skipWhileCharging get() = sp.getBoolean(SKIP_WHILE_CHARGING, false)
     val skipForegroundApp get() = sp.getBoolean(SKIP_FOREGROUND_APP, false)
     val skipNotifyingApp get() = sp.getBoolean(SKIP_NOTIFYING_APP, false)
+    val swipeFreezeEnabled get() = sp.getBoolean(SWIPE_FREEZE_ENABLED, false)
+    val swipeFreezeInterval get() = sp.getFloat(SWIPE_FREEZE_INTERVAL, 1f)
+    val swipeFreezeDelay get() = sp.getFloat(SWIPE_FREEZE_DELAY, 1f)
     val dynamicShortcutAction get() = sp.getString(DYNAMIC_SHORTCUT_ACTION, ACTION_NONE)!!
 
     private val dir = "${app.filesDir.path}/v1"
@@ -181,6 +187,9 @@ object HailData {
     }
 
     fun isChecked(packageName: String): Boolean = checkedList.any { it.packageName == packageName }
+
+    fun isWhitelisted(packageName: String): Boolean =
+        checkedList.find { it.packageName == packageName }?.whitelisted == true
 
     fun addCheckedApp(packageName: String, tagId: Int = 0, saveApps: Boolean = true) {
         checkedList.add(AppInfo(packageName, tagIdList = mutableListOf(tagId)))

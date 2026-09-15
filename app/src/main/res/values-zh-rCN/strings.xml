@@ -109,6 +109,12 @@
     <string name="action_export_all">全部导出</string>
     <string name="skip_notifying_app">保留通知中应用</string>
     <string name="auto_freeze_delay">冻结延时（分钟）</string>
+    <string name="swipe_freeze">划掉自动冻结</string>
+    <string name="swipe_freeze_notification_title">划掉冻结服务正在运行</string>
+    <string name="swipe_freeze_interval">轮询间隔（秒）</string>
+    <string name="swipe_freeze_delay">解冻后冻结延时（秒）</string>
+    <string name="swipe_freeze_needs_root">需要 Root 工作模式</string>
+    <string name="swipe_freeze_abnormal">划掉冻结已停止：dumpsys 输出异常，你的 ROM 可能不受支持。</string>
     <string name="mode_owner_suspend">设备所有者 - 暂停</string>
     <string name="mode_su_suspend">Root - 暂停</string>
     <string name="mode_shizuku_suspend">Shizuku - 暂停</string>

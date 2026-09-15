@@ -26,6 +26,7 @@
             android:name="android.permission.MANAGE_APP_OPS_MODES"
             tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="com.oasisfeng.island.permission.FREEZE_PACKAGE"/>
     <uses-permission android:name="com.oasisfeng.island.permission.SUSPEND_PACKAGE"/>
 
@@ -107,6 +108,13 @@
                 android:name=".receiver.ScreenOffReceiver"
                 android:exported="false"/>
         <receiver
+                android:name=".receiver.BootReceiver"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver
                 android:name=".receiver.UnsuspendedReceiver"
                 android:exported="false">
             <intent-filter>
@@ -136,6 +144,14 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService"/>
             </intent-filter>
+        </service>
+        <service
+                android:name=".services.SwipeFreezeService"
+                android:exported="false"
+                android:foregroundServiceType="specialUse">
+            <property
+                    android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                    android:value="swipe_freeze"/>
         </service>
     </application>
 

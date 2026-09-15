@@ -13,6 +13,8 @@ import com.aistra.hail.R
 import com.aistra.hail.app.AppInfo
 import com.aistra.hail.app.HailApi
 import com.aistra.hail.app.HailData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import me.zhanghai.android.appiconloader.AppIconLoader
 
 object HShortcuts {
@@ -38,14 +40,57 @@ object HShortcuts {
     }
 
     private fun addPinShortcut(icon: IconCompat, id: String, label: CharSequence, intent: Intent) {
-        if (ShortcutManagerCompat.isRequestPinShortcutSupported(app)) {
-            val shortcut =
-                ShortcutInfoCompat.Builder(app, id).setIcon(icon).setShortLabel(label)
-                    .setIntent(intent).build()
-            ShortcutManagerCompat.requestPinShortcut(app, shortcut, null)
-        } else HUI.showToast(
+        if (!requestPinShortcut(icon, id, label, intent)) HUI.showToast(
             R.string.operation_failed, app.getString(R.string.action_add_pin_shortcut)
         )
+    }
+
+    /**
+     * Requests the launcher to pin the shortcut.
+     * @return whether the request was submitted to the launcher;
+     * whether the user confirmed it afterwards is unknown to the system.
+     */
+    fun requestPinShortcut(icon: IconCompat, id: String, label: CharSequence, intent: Intent): Boolean =
+        runCatching {
+            ShortcutManagerCompat.isRequestPinShortcutSupported(app) && ShortcutManagerCompat.requestPinShortcut(
+                app,
+                ShortcutInfoCompat.Builder(app, id).setIcon(icon).setShortLabel(label).setIntent(intent).build(),
+                null
+            )
+        }.getOrDefault(false)
+
+    /**
+     * Requests pin shortcuts that unfreeze and launch apps, one by one, calling [awaitNext]
+     * after each submission, so that the launcher's confirmation dialog for the current
+     * request gets handled before the next one replaces it.
+     * Uninstalled apps are skipped; aborts when [shouldContinue] returns false
+     * or the launcher rejects a request (e.g. no home screen app).
+     *
+     * @return the number of submitted requests.
+     */
+    suspend fun requestBatchPinShortcuts(
+        apps: List<AppInfo>,
+        onProgress: (requested: Int, total: Int) -> Unit,
+        awaitNext: suspend () -> Unit,
+        shouldContinue: () -> Boolean
+    ): Int {
+        var requested = 0
+        for (appInfo in apps) {
+            if (!shouldContinue()) break
+            val pkg = appInfo.packageName
+            val applicationInfo = appInfo.applicationInfo ?: continue // Ghost data of uninstalled apps
+            val submitted = withContext(Dispatchers.Default) {
+                val icon = IconPack.loadIcon(pkg) ?: iconLoader.loadIcon(applicationInfo)
+                requestPinShortcut(
+                    IconCompat.createWithBitmap(icon), pkg, appInfo.name,
+                    HailApi.getIntentForPackage(HailApi.ACTION_LAUNCH, pkg)
+                )
+            }
+            if (!submitted) break
+            onProgress(++requested, apps.size)
+            awaitNext()
+        }
+        return requested
     }
 
     fun addDynamicShortcut(packageName: String) {

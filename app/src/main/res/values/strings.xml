@@ -30,6 +30,10 @@
     <string name="action_tag_remove">Remove tag</string>
     <string name="action_tag_set">Set tag</string>
     <string name="action_add_pin_shortcut">Add to Home screen</string>
+    <string name="msg_add_shortcuts">Home screen shortcuts will be requested for %1$s apps. The system will show a confirmation dialog for each app; tap Add for each one, and do not leave Hail in between.</string>
+    <string name="msg_adding_shortcuts">Requested %1$s/%2$s</string>
+    <string name="msg_shortcuts_requested">Requested shortcuts for %1$s apps</string>
+    <string name="msg_shortcuts_none">No eligible apps. Only frozen apps with a launcher activity can be added.</string>
     <string name="action_export_clipboard">Export to Clipboard</string>
     <string name="action_import_clipboard">Import from Clipboard</string>
     <string name="action_remove_home">Remove from Home</string>

@@ -29,6 +29,10 @@
     <string name="action_tag_remove">移除标签</string>
     <string name="action_tag_set">标签分组</string>
     <string name="action_add_pin_shortcut">添加到主屏幕</string>
+    <string name="msg_add_shortcuts">将为 %1$s 个应用请求创建桌面快捷方式，系统将逐个弹出确认框，请依次点击“添加”，期间请勿离开 Hail。</string>
+    <string name="msg_adding_shortcuts">已请求 %1$s/%2$s</string>
+    <string name="msg_shortcuts_requested">已请求为 %1$s 个应用创建快捷方式</string>
+    <string name="msg_shortcuts_none">没有符合条件的应用，仅支持已冻结且有启动页的应用。</string>
     <string name="action_export_clipboard">导出到剪切板</string>
     <string name="action_import_clipboard">从剪切板导入</string>
     <string name="action_remove_home">从首页中移除</string>

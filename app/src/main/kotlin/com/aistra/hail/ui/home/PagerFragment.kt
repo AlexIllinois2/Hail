@@ -1,5 +1,7 @@
 package com.aistra.hail.ui.home
 
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
 import android.text.InputType
@@ -43,6 +45,8 @@ import com.aistra.hail.ui.main.MainFragment
 import com.aistra.hail.ui.theme.AppTheme
 import com.aistra.hail.utils.*
 import com.aistra.hail.work.HWork
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -298,9 +302,10 @@ class PagerFragment : MainFragment(), PagerAdapter.OnItemClickListener, PagerAda
                 R.string.action_tag_set,
                 R.string.action_export_clipboard,
                 R.string.action_remove_home,
-                R.string.action_unfreeze_remove_home
+                R.string.action_unfreeze_remove_home,
+                R.string.action_add_pin_shortcut
             ).map { getString(it) }.toTypedArray()
-        ) { _, which ->
+        ) { dialog, which ->
             when (which) {
                 0 -> {
                     setListFrozen(true, selectedList, false)
@@ -333,6 +338,11 @@ class PagerFragment : MainFragment(), PagerAdapter.OnItemClickListener, PagerAda
                     HailData.saveApps()
                     deselect()
                 }
+
+                6 -> {
+                    dialog.dismiss()
+                    createShortcuts()
+                }
             }
         }.setNegativeButton(R.string.action_deselect) { _, _ ->
             deselect()
@@ -342,6 +352,73 @@ class PagerFragment : MainFragment(), PagerAdapter.OnItemClickListener, PagerAda
             updateBarTitle()
             onMultiSelect()
         }.show()
+    }
+
+    /**
+     * Requests home screen shortcuts for the selected frozen apps.
+     * Unfrozen apps already have their own launcher icons; apps without
+     * a launcher activity cannot be launched from a shortcut either.
+     */
+    private fun createShortcuts() {
+        val apps = selectedList.filter {
+            it.applicationInfo != null && AppManager.isAppFrozen(it.packageName)
+                    && it.hasLauncherActivity()
+        }
+        if (apps.isEmpty()) HUI.showToast(R.string.msg_shortcuts_none)
+        else MaterialAlertDialogBuilder(activity).setTitle(R.string.action_add_pin_shortcut)
+            .setMessage(getString(R.string.msg_add_shortcuts, apps.size.toString()))
+            .setPositiveButton(android.R.string.ok) { _, _ -> requestShortcuts(apps) }
+            .setNegativeButton(android.R.string.cancel, null).show()
+    }
+
+    /**
+     * [PackageManager.getLaunchIntentForPackage] returns null for frozen apps,
+     * as their launcher components are disabled or invisible to a default query.
+     */
+    private fun AppInfo.hasLauncherActivity(): Boolean = app.packageManager.queryIntentActivities(
+        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(packageName),
+        PackageManager.MATCH_DISABLED_COMPONENTS or PackageManager.MATCH_UNINSTALLED_PACKAGES
+                or PackageManager.MATCH_DISABLED_UNTIL_USED_COMPONENTS
+    ).isNotEmpty()
+
+    private fun requestShortcuts(apps: List<AppInfo>) {
+        var cancelled = false
+        val progress = MaterialAlertDialogBuilder(activity).setTitle(R.string.action_add_pin_shortcut)
+            .setMessage(getString(R.string.msg_adding_shortcuts, "0", apps.size.toString()))
+            .setNegativeButton(android.R.string.cancel) { _, _ -> cancelled = true }.show()
+        progress.setOnCancelListener { cancelled = true } // Back key press
+        viewLifecycleOwner.lifecycleScope.launch {
+            val requested = HShortcuts.requestBatchPinShortcuts(
+                apps, { done, total ->
+                    progress.setMessage(getString(R.string.msg_adding_shortcuts, done.toString(), total.toString()))
+                },
+                { awaitShortcutDialogClose() }
+            ) { !cancelled && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) }
+            if (_binding != null) {
+                runCatching { progress.dismiss() }
+                if (requested > 0) HUI.showToast(
+                    getString(R.string.msg_shortcuts_requested, requested.toString())
+                ) else HUI.showToast(R.string.operation_failed, getString(R.string.action_add_pin_shortcut))
+                deselect()
+            }
+        }
+    }
+
+    /**
+     * Waits until the launcher's confirmation dialog for the previous pin request is handled,
+     * as a new request would instantly replace the still-showing one.
+     * The dialog pauses Hail; when the user accepts or dismisses it, Hail becomes resumed again.
+     * The timeout falls back for launchers that pause Hail differently or never close the dialog.
+     */
+    private suspend fun awaitShortcutDialogClose() {
+        val settleMillis = 500L // Let the dialog appear (and pause Hail) first
+        val closeTimeoutMillis = 30_000L
+        val pollMillis = 200L
+        delay(settleMillis)
+        withTimeoutOrNull(closeTimeoutMillis) {
+            while (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) delay(pollMillis)
+        }
+        delay(settleMillis) // Gap before the next dialog
     }
 
     private fun triStateTagDialog() {

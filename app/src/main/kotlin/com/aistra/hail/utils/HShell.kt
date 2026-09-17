@@ -18,6 +18,14 @@ object HShell {
 
     private fun execSU(command: String) = execute(command, true)
 
+    /**
+     * Spawns [command] with root and returns immediately without waiting for its completion,
+     * e.g. for background watchdog processes that outlive Hail.
+     */
+    fun spawnRoot(command: String): Boolean = runCatching {
+        ProcessBuilder("su", "-c", command).start()
+    }.isSuccess
+
     val checkSU get() = execSU("whoami").first == 0
 
     val lockScreen get() = execSU("input keyevent KEYCODE_POWER").first == 0

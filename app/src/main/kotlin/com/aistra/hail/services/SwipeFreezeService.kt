@@ -26,40 +26,34 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
+import java.io.File
 
 /**
- * Auto freezes checked apps when their task is removed from recents (e.g. swiped away).
+ * Auto freezes checked apps that are absent from recents, so that every managed app
+ * absent from the recents screen ends up frozen, even if it was swiped away or its
+ * task was never seen (e.g. before this service started).
+ * Apps with a task in recents are never touched.
  *
- * Requires a root working mode: it polls [DUMP_RECENTS_COMMAND] and `pidof` via a root shell.
- * A package is frozen only on a state transition, so that unfrozen-but-never-launched
- * packages and the other app in split screen are never affected:
- * - task seen in recents, then disappeared: swiped away or cleaned;
- * - task remains, but its process was alive and is now dead: system cleaned the process.
+ * Requires a root working mode: it polls [DUMP_RECENTS_COMMAND] via a root shell.
  */
 class SwipeFreezeService : Service() {
     private val channelID = javaClass.simpleName
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val states = ConcurrentHashMap<String, FreezeState>()
-
-    private class FreezeState {
-        var taskSeen = false
-        var processAlive = false
-    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         startAsForeground()
+        startWatchdog()
         scope.launch { pollLoop() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
     override fun onDestroy() {
+        stopWatchdog()
         scope.cancel()
-        states.clear()
         TempUnfrozenList.clear()
         super.onDestroy()
     }
@@ -99,7 +93,7 @@ class SwipeFreezeService : Service() {
 
     private suspend fun CoroutineScope.pollLoop() {
         seedCheckedApps()
-        var abnormalDumps = 0
+        var abnormalPolls = 0
         while (isActive) {
             delay(pollIntervalMillis)
             val snapshot = TempUnfrozenList.snapshot()
@@ -108,33 +102,19 @@ class SwipeFreezeService : Service() {
             val recents = HShell.execute(DUMP_RECENTS_COMMAND, true).second.orEmpty()
             if (recents.isBlank()) {
                 // dumpsys keeps returning nothing: the ROM may be incompatible, stop before misfreezing.
-                if (++abnormalDumps >= ABNORMAL_DUMPS_LIMIT) {
+                if (++abnormalPolls >= ABNORMAL_POLLS_LIMIT) {
                     HUI.showToast(R.string.swipe_freeze_abnormal, isLengthLong = true)
                     stopSelf()
                     break
                 }
                 continue
             }
-            abnormalDumps = 0
+            abnormalPolls = 0
 
             val now = System.currentTimeMillis()
             snapshot.forEach { (packageName, unfrozenAt) ->
                 if (now - unfrozenAt < (HailData.swipeFreezeDelay * 1000).toLong()) return@forEach
-                val state = states.getOrPut(packageName) { FreezeState() }
-                when {
-                    recents.containsPackage(packageName) -> when {
-                        !state.taskSeen -> {
-                            state.taskSeen = true
-                            state.processAlive = isProcessAlive(packageName)
-                        }
-
-                        state.processAlive -> {
-                            if (!isProcessAlive(packageName)) freezeApp(packageName) // Process died while task remained
-                        }
-                    }
-
-                    state.taskSeen -> freezeApp(packageName) // Task removed: swiped away or cleaned
-                }
+                if (!recents.containsPackage(packageName)) freezeApp(packageName)
             }
         }
     }
@@ -147,11 +127,7 @@ class SwipeFreezeService : Service() {
         }
     }
 
-    private fun isProcessAlive(packageName: String): Boolean =
-        HShell.execute("pidof $packageName", true).second?.isNotBlank() == true
-
     private fun freezeApp(packageName: String) {
-        states.remove(packageName)
         TempUnfrozenList.remove(packageName)
         if (!AppManager.setAppFrozen(packageName, true)) {
             HUI.showToast(R.string.permission_denied)
@@ -160,10 +136,36 @@ class SwipeFreezeService : Service() {
 
     private companion object {
         const val NOTIFICATION_ID = 101
-        const val ABNORMAL_DUMPS_LIMIT = 3
+        const val ABNORMAL_POLLS_LIMIT = 3
         const val IDLE_INTERVAL_FACTOR = 10
         const val DUMP_RECENTS_COMMAND = "dumpsys activity recents"
     }
+
+    /**
+     * Keeps this service alive when the ROM kills Hail on task swipe (cancelling START_STICKY
+     * restarts): a root watchdog loop revives it within seconds. It is root-only, as is this service.
+     */
+    private fun startWatchdog() {
+        if (!HailData.workingMode.startsWith(HailData.SU)) return
+        HShell.execute("touch '$watchdogMarker'", true)
+        // `hail_[w]d` never matches this check's own command line, unlike a plain `hail_wd`.
+        if (HShell.execute("pgrep -f hail_[w]d", true).second.isNullOrBlank()) HShell.spawnRoot(
+            "while true; do sleep 10; " +
+                "[ -f '$watchdogMarker' ] || break; " + // Feature disabled
+                "[ -n \"$(pm path $packageName 2>/dev/null)\" ] || break; " + // App uninstalled
+                "pidof $packageName >/dev/null 2>&1 || " +
+                "am start-foreground-service -n $packageName/.services.SwipeFreezeService; " +
+                "done # hail_wd" // Tag for pgrep
+        )
+    }
+
+    private fun stopWatchdog() {
+        if (!HailData.workingMode.startsWith(HailData.SU)) return
+        HShell.execute("rm -f '$watchdogMarker'", true) // The watchdog exits when it sees this
+    }
+
+    private val watchdogMarker: String
+        get() = File(filesDir, ".swipe_freeze_wd").absolutePath
 }
 
 /** Matches [packageName] as a whole word, so that `com.foo` does not match `com.foobar`. */

@@ -23,6 +23,11 @@ class HailApp : Application() {
         // DirtyDataUpdater.update(app)
         if (!HTarget.S) setAppTheme(HailData.appTheme)
         if (HailData.workingMode.startsWith(HailData.DHIZUKU)) HDhizuku.init()
+        // Package update force-stops the app and cancels START_STICKY restarts,
+        // so the service must be restored here as well as on boot.
+        if (HailData.swipeFreezeEnabled && HailData.workingMode.startsWith(HailData.SU)) {
+            setSwipeFreezeService(true)
+        }
     }
 
     fun setAutoFreezeService(autoFreezeAfterLock: Boolean = HailData.autoFreezeAfterLock, context: Context = app) {

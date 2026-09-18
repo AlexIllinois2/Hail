@@ -43,7 +43,7 @@
     <string name="action_unpin">Відкріпити</string>
     <string name="action_whitelist">Додати до білого списку</string>
     <string name="activity_not_found">Активіті для запуску не знайдено</string>
-    <string name="app_name">Hail</string>
+    <string name="app_name">Snub</string>
     <string name="app_not_installed">Застосунок не встановлено</string>
     <string name="app_slogan">Freezedom!</string>
     <string name="auto_freeze">Автозаморожування</string>

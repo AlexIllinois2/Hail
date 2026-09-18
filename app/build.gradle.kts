@@ -14,11 +14,11 @@ android {
         commandLine = "git log -1 --pretty=%s".split(" ")
     }.standardOutput.asText.get().trim()
 
-    namespace = "com.aistra.hail"
+    namespace = "io.github.AlexIllinois2.snub"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aistra.hail"
+        applicationId = "io.github.AlexIllinois2.snub"
         minSdk = 23
         targetSdk = 36
         versionCode = 35
@@ -67,7 +67,7 @@ androidComponents {
     onVariants { variant ->
         variant.outputs.forEach {
             if (it is com.android.build.api.variant.impl.VariantOutputImpl)
-                it.outputFileName = "Hail-v${it.versionName.get()}.apk"
+                it.outputFileName = "Snub-v${it.versionName.get()}.apk"
         }
     }
 }

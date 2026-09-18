@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hail</string>
+    <string name="app_name">Snub</string>
     <string name="msg_remove_owner">إذا تمت إزالة Hail كمالك للجهاز، فقد تكون هناك صعوبات في إعادة تنظيم التطبيقات بعد إزالة hail.
 \nستظل التطبيقات المجمدة مجمدة بعد إلغاء التثبيت، يرجى التأكد من إلغاء تجميد التطبيقات المهمة.</string>
     <string name="msg_freeze">مجمد: %s</string>

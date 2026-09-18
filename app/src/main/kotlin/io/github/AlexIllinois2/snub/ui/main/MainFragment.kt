@@ -1,0 +1,7 @@
+package io.github.AlexIllinois2.snub.ui.main
+
+import androidx.fragment.app.Fragment
+
+abstract class MainFragment : Fragment() {
+    protected val activity: MainActivity get() = requireActivity() as MainActivity
+}

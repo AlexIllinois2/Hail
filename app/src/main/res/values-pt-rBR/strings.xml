@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hail</string>
+    <string name="app_name">Snub</string>
     <string name="msg_remove_owner">Se o Hail for removido como proprietário do dispositivo, poderá haver dificuldades para reorganizar os aplicativos após a remoção do Hail.
 \nOs aplicativos congelados permanecerão congelados após a remoção. Certifique-se de descongelar os aplicativos importantes.</string>
     <string name="msg_freeze">Congelado: %s</string>

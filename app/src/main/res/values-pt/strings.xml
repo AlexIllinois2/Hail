@@ -123,7 +123,7 @@
     <string name="title_set_owner">Definir proprietário do dispositivo</string>
     <string name="action_freeze_current">Congelar o visível</string>
     <string name="msg_extract_apk">Extraído para: %s</string>
-    <string name="app_name">Hail</string>
+    <string name="app_name">Snub</string>
     <string name="action_freeze_non_whitelisted">Congelar não incluído na lista de permissões</string>
     <string name="action_unfreeze_current">Descongelar o visível</string>
     <string name="dynamic_shortcut_action">Ação de atalho dinâmico</string>

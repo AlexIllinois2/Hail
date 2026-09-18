@@ -62,7 +62,7 @@
         <item quantity="many">%d minuty</item>
         <item quantity="other">%d minuty</item>
     </plurals>
-    <string name="app_name">Hail</string>
+    <string name="app_name">Snub</string>
     <string name="title_home">Ekran główny</string>
     <string name="title_apps">Aplikacje</string>
     <string name="action_freeze_all">Zamroź wszystkie</string>

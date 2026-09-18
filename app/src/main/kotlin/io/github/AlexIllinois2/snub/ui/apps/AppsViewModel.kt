@@ -88,9 +88,13 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
         query: String?
     ): List<ApplicationInfo> {
         val pm = getApplication<HailApp>().packageManager
+        val selfPackageName = getApplication<HailApp>().packageName
         return withContext(Dispatchers.Default) {
             return@withContext appList.filter {
-                ((HailData.filterUserApps && !it.isSystemApp)
+                // Do not show the app itself, otherwise it could be frozen by mistake
+                it.packageName != selfPackageName
+
+                        && ((HailData.filterUserApps && !it.isSystemApp)
                         || (HailData.filterSystemApps && it.isSystemApp))
 
                         && ((HailData.filterFrozenApps && it.isAppFrozen)

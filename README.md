@@ -1,16 +1,23 @@
 English | [简体中文](README.zh_CN.md) | [日本語](README.ja.md)
 
-# Hail 雹
+# Snub
 
-[![Android CI status](https://github.com/aistra0528/Hail/workflows/Android%20CI/badge.svg)](https://github.com/aistra0528/Hail/actions)
-[![Translation status](https://hosted.weblate.org/widgets/hail/-/svg-badge.svg)](https://hosted.weblate.org/engage/hail/)
-[![Downloads](https://img.shields.io/github/downloads/aistra0528/Hail/total.svg)](https://github.com/aistra0528/Hail/releases)
-[![License](https://img.shields.io/github/license/aistra0528/Hail)](LICENSE)
+[![Android CI status](https://github.com/AlexIllinois2/snub/workflows/Android%20CI/badge.svg)](https://github.com/AlexIllinois2/snub/actions)
 
-Hail is a free-as-in-freedom software to freeze Android
-apps. [GitHub Releases](https://github.com/aistra0528/Hail/releases)
+Snub is a fork of [Hail](https://github.com/aistra0528/Hail), a free-as-in-freedom software to
+freeze Android apps. [GitHub Releases](https://github.com/AlexIllinois2/snub/releases)
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.aistra.hail/)
+## Changes over upstream Hail
+
+- **Renamed**: app name *Hail* → *Snub*, package name `com.aistra.hail` → `io.github.AlexIllinois2.snub`.
+  API actions become `io.github.AlexIllinois2.snub.action.*`, while the URI scheme remains `hail://`.
+- **Auto freeze on swipe**: a foreground service (Root working mode only) polls the recents screen and
+  automatically freezes managed apps that are absent from recents, including apps swiped away or never seen.
+  Polling interval, freeze delay after unfreeze and other options are configurable in Settings, and the
+  service is restored on boot.
+- **Batch home screen shortcuts**: create launcher shortcuts for all eligible frozen apps on a tag page
+  in one go, instead of adding them one by one.
+- **CI releases**: GitHub Actions automatically builds and attaches an APK to a GitHub Release on tag push.
 
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="32%" /> <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="32%" /> <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="32%" />
 
@@ -20,7 +27,7 @@ Freeze is a word that describes the action of **blocking (immediately stopping) 
 on-demand request)** which in turn helps the device to cut down on the usage of RAM and save power. Users can also
 unfreeze them to revert to their original state.
 
-In general, "freeze" means disable, but also Hail can "freeze" apps by hiding and suspending them.
+In general, "freeze" means disable, but also Snub can "freeze" apps by hiding and suspending them.
 
 ### Disable
 
@@ -48,7 +55,7 @@ background.
 
 ## Working mode
 
-**Any app that has been frozen on Hail will need to be unfrozen by the same working mode.**
+**Any app that has been frozen on Snub will need to be unfrozen by the same working mode.**
 
 1. For devices supporting wireless debugging (Android 11+) or rooted devices, `Shizuku` is recommended.
 
@@ -66,7 +73,7 @@ background.
 
 ### Device Owner
 
-**You must remove Hail as a device owner before you can uninstall it**
+**You must remove Snub as a device owner before you can uninstall it**
 
 #### Set device owner by adb
 
@@ -77,13 +84,13 @@ background.
 Issue adb command:
 
 ```shell
-adb shell dpm set-device-owner com.aistra.hail/.receiver.DeviceAdminReceiver
+adb shell dpm set-device-owner io.github.AlexIllinois2.snub/.receiver.DeviceAdminReceiver
 ```
 
 In response, adb prints this message if device owner has been successfully set:
 
 ```
-Success: Device owner set to package com.aistra.hail. Active admin set to component {com.aistra.hail/com.aistra.hail.receiver.DeviceAdminReceiver}
+Success: Device owner set to package io.github.AlexIllinois2.snub. Active admin set to component {io.github.AlexIllinois2.snub/io.github.AlexIllinois2.snub.receiver.DeviceAdminReceiver}
 ```
 
 Search the message by search engine otherwise.
@@ -99,7 +106,7 @@ The following privapp-permissions is required:
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <permissions>
-    <privapp-permissions package="com.aistra.hail">
+    <privapp-permissions package="io.github.AlexIllinois2.snub">
         <permission name="android.permission.PACKAGE_USAGE_STATS"/>
         <permission name="android.permission.FORCE_STOP_PACKAGES"/>
         <permission name="android.permission.CHANGE_COMPONENT_ENABLED_STATE"/>
@@ -108,14 +115,14 @@ The following privapp-permissions is required:
 </permissions>
 ```
 
-To use this mode, you should install Hail as a privileged system app.
+To use this mode, you should install Snub as a privileged system app.
 
-The recommended approach is to import Hail when building your ROM, here's an example for `Android.bp`:
+The recommended approach is to import Snub when building your ROM, here's an example for `Android.bp`:
 
 ```bp
 android_app_import {
-    name: "Hail",
-    apk: "Hail.apk",
+    name: "Snub",
+    apk: "Snub.apk",
     privileged: true,
 
     dex_preopt: {
@@ -124,11 +131,11 @@ android_app_import {
     presigned: true,
     preprocessed: true,
 
-    required: ["privapp-permissions_com.aistra.hail.xml"]
+    required: ["privapp-permissions_io.github.AlexIllinois2.snub.xml"]
 }
 
 prebuilt_etc {
-    name: "privapp-permissions_com.aistra.hail.xml",
+    name: "privapp-permissions_io.github.AlexIllinois2.snub.xml",
     src: "privapp-permissions.xml",
     sub_dir: "permissions",
 }
@@ -172,29 +179,29 @@ adb shell am start -a action -e key value
 
 `action` can be one of the following constants:
 
-- `com.aistra.hail.action.LAUNCH`: Unfreeze and launch target app. If it is unfrozen, it will launch directly.
+- `io.github.AlexIllinois2.snub.action.LAUNCH`: Unfreeze and launch target app. If it is unfrozen, it will launch directly.
   `key="package"` `value="com.package.name"`
 
-- `com.aistra.hail.action.FREEZE`: Freeze target app. It must be checked at Home. `key="package"`
+- `io.github.AlexIllinois2.snub.action.FREEZE`: Freeze target app. It must be checked at Home. `key="package"`
   `value="com.package.name"`
 
-- `com.aistra.hail.action.UNFREEZE`: Unfreeze target app. `key="package"` `value="com.package.name"`
+- `io.github.AlexIllinois2.snub.action.UNFREEZE`: Unfreeze target app. `key="package"` `value="com.package.name"`
 
-- `com.aistra.hail.action.FREEZE_TAG`: Freeze all non-whitelisted apps in the target tag. `key="tag"` `value="Tag name"`
+- `io.github.AlexIllinois2.snub.action.FREEZE_TAG`: Freeze all non-whitelisted apps in the target tag. `key="tag"` `value="Tag name"`
 
-- `com.aistra.hail.action.UNFREEZE_TAG`: Unfreeze all apps in the target tag. `key="tag"` `value="Tag name"`
+- `io.github.AlexIllinois2.snub.action.UNFREEZE_TAG`: Unfreeze all apps in the target tag. `key="tag"` `value="Tag name"`
 
-- `com.aistra.hail.action.FREEZE_ALL`: Freeze all apps at Home. `extra` is not necessary.
+- `io.github.AlexIllinois2.snub.action.FREEZE_ALL`: Freeze all apps at Home. `extra` is not necessary.
 
-- `com.aistra.hail.action.UNFREEZE_ALL`: Unfreeze all apps at Home. `extra` is not necessary.
+- `io.github.AlexIllinois2.snub.action.UNFREEZE_ALL`: Unfreeze all apps at Home. `extra` is not necessary.
 
-- `com.aistra.hail.action.FREEZE_NON_WHITELISTED`: Freeze all non-whitelisted apps at Home. `extra` is not necessary.
+- `io.github.AlexIllinois2.snub.action.FREEZE_NON_WHITELISTED`: Freeze all non-whitelisted apps at Home. `extra` is not necessary.
 
-- `com.aistra.hail.action.FREEZE_AUTO`: Auto freeze apps at Home. `extra` is not necessary.
+- `io.github.AlexIllinois2.snub.action.FREEZE_AUTO`: Auto freeze apps at Home. `extra` is not necessary.
 
-- `com.aistra.hail.action.LOCK`: Lock screen. `extra` is not necessary.
+- `io.github.AlexIllinois2.snub.action.LOCK`: Lock screen. `extra` is not necessary.
 
-- `com.aistra.hail.action.LOCK_FREEZE`: Freeze all apps at Home and lock screen. `extra` is not necessary.
+- `io.github.AlexIllinois2.snub.action.LOCK_FREEZE`: Freeze all apps at Home and lock screen. `extra` is not necessary.
 
 or use following `schema`:
 
@@ -219,13 +226,6 @@ or use following `schema`:
 - `hail://lock`
 
 - `hail://lock_freeze`
-
-## Help Translate
-
-To translate Hail into your language, or to improve an existing translation,
-use [Weblate](https://hosted.weblate.org/engage/hail/).
-
-[![Translation status](https://hosted.weblate.org/widgets/hail/-/multi-auto.svg)](https://hosted.weblate.org/engage/hail/)
 
 ## License
 

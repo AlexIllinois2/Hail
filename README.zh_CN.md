@@ -1,15 +1,20 @@
 [English](README.md) | 简体中文 | [日本語](README.ja.md)
 
-# 雹 Hail
+# 怠 Snub
 
-[![Android CI status](https://github.com/aistra0528/Hail/workflows/Android%20CI/badge.svg)](https://github.com/aistra0528/Hail/actions)
-[![翻译状态](https://hosted.weblate.org/widgets/hail/-/svg-badge.svg)](https://hosted.weblate.org/engage/hail/)
-[![Downloads](https://img.shields.io/github/downloads/aistra0528/Hail/total.svg)](https://github.com/aistra0528/Hail/releases)
-[![License](https://img.shields.io/github/license/aistra0528/Hail)](LICENSE)
+[![Android CI status](https://github.com/AlexIllinois2/snub/workflows/Android%20CI/badge.svg)](https://github.com/AlexIllinois2/snub/actions)
 
-雹是一款用于冻结 Android 应用的自由软件。[GitHub Releases](https://github.com/aistra0528/Hail/releases)
+怠（Snub）是 [雹 Hail](https://github.com/aistra0528/Hail) 的分支（fork），是一款用于冻结 Android
+应用的自由软件。[GitHub Releases](https://github.com/AlexIllinois2/snub/releases)
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.aistra.hail/)
+## 相对上游 Hail 的修改
+
+- **改名**：应用名 *Hail（雹）* → *Snub（怠）*，包名 `com.aistra.hail` → `io.github.AlexIllinois2.snub`。
+  API action 变为 `io.github.AlexIllinois2.snub.action.*`，URI scheme 仍为 `hail://`。
+- **划掉自动冻结**：前台服务（仅 Root 工作模式）轮询最近任务屏幕，自动冻结所有不在最近任务中的受管应用，
+  包括被划掉的应用和从未出现过的应用。轮询间隔、解冻后冻结延时等选项可在设置中配置，开机后自动恢复服务。
+- **批量创建桌面图标**：一键为标签页内所有符合条件的已冻结应用请求桌面快捷方式，无需逐个添加。
+- **CI 发布**：GitHub Actions 在推送标签时自动构建并将 APK 附加到 GitHub Release。
 
 <img src="fastlane/metadata/android/zh-CN/images/phoneScreenshots/1.png" width="32%" /> <img src="fastlane/metadata/android/zh-CN/images/phoneScreenshots/2.png" width="32%" /> <img src="fastlane/metadata/android/zh-CN/images/phoneScreenshots/3.png" width="32%" />
 
@@ -18,7 +23,7 @@
 冻结`freeze`是一个营销用语，用于描述使**应用在用户不需要时不可运行**
 的行为，以此控制设备使用、减少内存占用和节省电量。用户可在需要时解冻`unfreeze`应用。
 
-在一般情况下，“冻结”是指停用，此外雹也可以通过隐藏和暂停来“冻结”应用。
+在一般情况下，“冻结”是指停用，此外怠也可以通过隐藏和暂停来“冻结”应用。
 
 ### 停用
 
@@ -61,7 +66,7 @@
 
 **设置为设备所有者的应用需要移除设备所有者后方可卸载。**
 
-#### 通过 adb 将雹设置为设备所有者
+#### 通过 adb 将怠设置为设备所有者
 
 [Android 调试桥 (adb) 指南](https://developer.android.google.cn/studio/command-line/adb)
 
@@ -70,19 +75,19 @@
 通过 adb 发出命令：
 
 ```shell
-adb shell dpm set-device-owner com.aistra.hail/.receiver.DeviceAdminReceiver
+adb shell dpm set-device-owner io.github.AlexIllinois2.snub/.receiver.DeviceAdminReceiver
 ```
 
 设置成功后会输出以下信息：
 
 ```
-Success: Device owner set to package com.aistra.hail
-Active admin set to component {com.aistra.hail/com.aistra.hail.receiver.DeviceAdminReceiver}
+Success: Device owner set to package io.github.AlexIllinois2.snub
+Active admin set to component {io.github.AlexIllinois2.snub/io.github.AlexIllinois2.snub.receiver.DeviceAdminReceiver}
 ```
 
 如输出其他信息，请使用搜索引擎自行查阅与解决。
 
-#### 移除雹的设备所有者
+#### 移除怠的设备所有者
 
 设置 > 移除设备所有者
 
@@ -93,7 +98,7 @@ Active admin set to component {com.aistra.hail/com.aistra.hail.receiver.DeviceAd
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <permissions>
-    <privapp-permissions package="com.aistra.hail">
+    <privapp-permissions package="io.github.AlexIllinois2.snub">
         <permission name="android.permission.PACKAGE_USAGE_STATS"/>
         <permission name="android.permission.FORCE_STOP_PACKAGES"/>
         <permission name="android.permission.CHANGE_COMPONENT_ENABLED_STATE"/>
@@ -102,14 +107,14 @@ Active admin set to component {com.aistra.hail/com.aistra.hail.receiver.DeviceAd
 </permissions>
 ```
 
-并将雹安装为特权系统应用。
+并将怠安装为特权系统应用。
 
-推荐方法是在构建 ROM 时导入雹，`Android.bp`配置示例：
+推荐方法是在构建 ROM 时导入怠，`Android.bp`配置示例：
 
 ```bp
 android_app_import {
-    name: "Hail",
-    apk: "Hail.apk",
+    name: "Snub",
+    apk: "Snub.apk",
     privileged: true,
 
     dex_preopt: {
@@ -118,11 +123,11 @@ android_app_import {
     presigned: true,
     preprocessed: true,
 
-    required: ["privapp-permissions_com.aistra.hail.xml"]
+    required: ["privapp-permissions_io.github.AlexIllinois2.snub.xml"]
 }
 
 prebuilt_etc {
-    name: "privapp-permissions_com.aistra.hail.xml",
+    name: "privapp-permissions_io.github.AlexIllinois2.snub.xml",
     src: "privapp-permissions.xml",
     sub_dir: "permissions",
 }
@@ -165,27 +170,27 @@ adb shell am start -a action -e key value
 
 `action`可为：
 
-- `com.aistra.hail.action.LAUNCH`：解冻并启动目标应用。应用未冻结时会直接启动。`key="package"` `value="com.package.name"`
+- `io.github.AlexIllinois2.snub.action.LAUNCH`：解冻并启动目标应用。应用未冻结时会直接启动。`key="package"` `value="com.package.name"`
 
-- `com.aistra.hail.action.FREEZE`：冻结目标应用。应用需处于首页。`key="package"` `value="com.package.name"`
+- `io.github.AlexIllinois2.snub.action.FREEZE`：冻结目标应用。应用需处于首页。`key="package"` `value="com.package.name"`
 
-- `com.aistra.hail.action.UNFREEZE`：解冻目标应用。`key="package"` `value="com.package.name"`
+- `io.github.AlexIllinois2.snub.action.UNFREEZE`：解冻目标应用。`key="package"` `value="com.package.name"`
 
-- `com.aistra.hail.action.FREEZE_TAG`：冻结目标标签中的全部非白名单应用。`key="tag"` `value="标签名"`
+- `io.github.AlexIllinois2.snub.action.FREEZE_TAG`：冻结目标标签中的全部非白名单应用。`key="tag"` `value="标签名"`
 
-- `com.aistra.hail.action.UNFREEZE_TAG`：解冻目标标签中的全部应用。`key="tag"` `value="标签名"`
+- `io.github.AlexIllinois2.snub.action.UNFREEZE_TAG`：解冻目标标签中的全部应用。`key="tag"` `value="标签名"`
 
-- `com.aistra.hail.action.FREEZE_ALL`：冻结首页全部应用。无需`extra`。
+- `io.github.AlexIllinois2.snub.action.FREEZE_ALL`：冻结首页全部应用。无需`extra`。
 
-- `com.aistra.hail.action.UNFREEZE_ALL`：解冻首页全部应用。无需`extra`。
+- `io.github.AlexIllinois2.snub.action.UNFREEZE_ALL`：解冻首页全部应用。无需`extra`。
 
-- `com.aistra.hail.action.FREEZE_NON_WHITELISTED`：冻结首页全部非白名单应用。无需`extra`。
+- `io.github.AlexIllinois2.snub.action.FREEZE_NON_WHITELISTED`：冻结首页全部非白名单应用。无需`extra`。
 
-- `com.aistra.hail.action.FREEZE_AUTO`：自动冻结首页应用。无需`extra`。
+- `io.github.AlexIllinois2.snub.action.FREEZE_AUTO`：自动冻结首页应用。无需`extra`。
 
-- `com.aistra.hail.action.LOCK`：锁定屏幕。无需`extra`。
+- `io.github.AlexIllinois2.snub.action.LOCK`：锁定屏幕。无需`extra`。
 
-- `com.aistra.hail.action.LOCK_FREEZE`：冻结首页全部应用并锁定屏幕。无需`extra`。
+- `io.github.AlexIllinois2.snub.action.LOCK_FREEZE`：冻结首页全部应用并锁定屏幕。无需`extra`。
 
 或使用以下`schema`:
 
@@ -210,12 +215,6 @@ adb shell am start -a action -e key value
 - `hail://lock`
 
 - `hail://lock_freeze`
-
-## 协助翻译
-
-要将雹翻译成您的语言，或完善现有的翻译，请使用 [Weblate](https://hosted.weblate.org/engage/hail/)。
-
-[![翻译状态](https://hosted.weblate.org/widgets/hail/-/multi-auto.svg)](https://hosted.weblate.org/engage/hail/)
 
 ## 许可证
 
